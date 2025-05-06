@@ -32,6 +32,9 @@
     "clearHistory": {
         "message": "履歴削除"
     },
+    "deleteSelect": {
+        "message": "選択した履歴を削除"
+    },
     "noHistory": {
         "message": "履歴なし"
     },
@@ -49,5 +52,8 @@
     },
     "confirmClearHistory": {
         "message": "履歴を全削除しますか？"
+    },
+    "confirmSelectClearHistory": {
+        "message": "選択した履歴を削除しますか？"
     }
 }

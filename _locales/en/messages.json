@@ -32,6 +32,9 @@
     "clearHistory": {
         "message": "Clear History"
     },
+    "deleteSelect": {
+        "message": "Delete Selected History"
+    },
     "noHistory": {
         "message": "No history"
     },
@@ -49,5 +52,8 @@
     },
     "confirmClearHistory": {
         "message": "Are you sure you want to delete all history?"
+    },
+    "confirmSelectClearHistory": {
+        "message": "Are you sure you want to delete the selected history?"
     }
 }

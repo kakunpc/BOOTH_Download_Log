@@ -130,6 +130,9 @@ document.addEventListener('DOMContentLoaded', function () {
           titleLink.style.whiteSpace = "nowrap";
           titleLink.style.overflow = "hidden";
           titleLink.style.textOverflow = "ellipsis";
+          if (group.entries.every(entry => entry.deleted)) {
+            titleLink.style.textDecoration = "line-through";
+          }
           titleLine.appendChild(titleLink);
           entryDiv.appendChild(titleLine);
 
@@ -137,71 +140,114 @@ document.addEventListener('DOMContentLoaded', function () {
           if (toggleBulkRegisterCheckbox.checked) {
             // 複数のアイテムがある場合のみ表示
             // if (group.entries.length > 1) {
-              // ファイル一覧とボタンのコンテナ
-              const infoLine = document.createElement("div");
-              infoLine.style.display = "flex";
-              infoLine.style.alignItems = "flex-start";
-              infoLine.style.marginTop = "2px";
+            // ファイル一覧とボタンのコンテナ
+            const infoLine = document.createElement("div");
+            infoLine.style.display = "flex";
+            infoLine.style.alignItems = "flex-start";
+            infoLine.style.marginTop = "2px";
 
-              // ファイル一覧
-              const fileListDiv = document.createElement("div");
-              fileListDiv.style.flexGrow = "1";
-              fileListDiv.style.fontSize = "0.9em";
-              group.entries.forEach(entry => {
-                const fileEntry = document.createElement("div");
-                fileEntry.style.whiteSpace = "nowrap";
-                fileEntry.style.overflow = "hidden";
-                fileEntry.style.textOverflow = "ellipsis";
-                const formattedTime = formatTimestamp(entry.timestamp);
-                fileEntry.textContent = `[${formattedTime}] ${entry.filename}`;
-                fileListDiv.appendChild(fileEntry);
-              });
+            // ファイル一覧
+            const fileListDiv = document.createElement("div");
+            fileListDiv.style.flexGrow = "1";
+            fileListDiv.style.fontSize = "0.9em";
+            group.entries.forEach(entry => {
+              const fileEntry = document.createElement("div");
+              fileEntry.style.whiteSpace = "nowrap";
+              fileEntry.style.overflow = "hidden";
+              fileEntry.style.textOverflow = "ellipsis";
+              if(entry.deleted) {
+                fileEntry.style.textDecoration = "line-through";
+              }
+              const formattedTime = formatTimestamp(entry.timestamp);
+              fileEntry.textContent = `[${formattedTime}] ${entry.filename}`;
+              fileListDiv.appendChild(fileEntry);
+            });
 
-              // ボタンコンテナ
-              const btnContainer = document.createElement("div");
-              btnContainer.style.display = "flex";
-              btnContainer.style.gap = "10px";
-              btnContainer.style.flexShrink = "0";
-              btnContainer.style.marginLeft = "10px";
+            // ボタンコンテナ
+            const btnContainer = document.createElement("div");
+            btnContainer.style.display = "flex";
+            btnContainer.style.gap = "10px";
+            btnContainer.style.flexShrink = "0";
+            btnContainer.style.marginLeft = "10px";
 
-              // KonoAssetボタン
-              const konoBtn = document.createElement("button");
-              konoBtn.textContent = "KonoAsset";
-              Object.assign(konoBtn.style, {
-                fontSize: "1em",
-                padding: "6px 12px",
-                minWidth: "130px",
-                cursor: "pointer"
-              });
-              konoBtn.addEventListener("click", function (event) {
-                event.stopPropagation();
-                event.preventDefault();
-                chrome.storage.local.get("downloadFolderPath", function (result) {
-                  const path = result.downloadFolderPath || "";
-                  if (path.trim() === "") {
-                    showFolderNotSetAlert();
-                    return;
-                  }
-                  const pathParams = group.entries
-                    .map(entry => `path=${encodeURIComponent(path + "/" + entry.filename)}`)
-                    .join("&");
-                  const assetUrl = `konoasset://addAsset?${pathParams}&id=${group.boothID}`;
-                  window.location.href = assetUrl;
-                  if (toggleDeleteAfterRegisterCheckbox.checked) {
-                    let newHistory = history.filter(entry => entry.boothID !== group.boothID);
-                    // 登録したらこれを削除
-                    chrome.storage.local.set({ downloadHistory: newHistory }, function () {
+            // KonoAssetボタン
+            const konoBtn = document.createElement("button");
+            konoBtn.textContent = "KonoAsset";
+            Object.assign(konoBtn.style, {
+              fontSize: "1em",
+              padding: "6px 12px",
+              minWidth: "130px",
+              cursor: "pointer"
+            });
+            konoBtn.addEventListener("click", function (event) {
+              event.stopPropagation();
+              event.preventDefault();
+              chrome.storage.local.get("downloadFolderPath", function (result) {
+                const path = result.downloadFolderPath || "";
+                if (path.trim() === "") {
+                  showFolderNotSetAlert();
+                  return;
+                }
+                const pathParams = group.entries
+                  .map(entry => `path=${encodeURIComponent(path + "/" + entry.filename)}`)
+                  .join("&");
+                const assetUrl = `konoasset://addAsset?${pathParams}&id=${group.boothID}`;
+                window.location.href = assetUrl;
+                if (toggleDeleteAfterRegisterCheckbox.checked) {
+                  // 削除チェックを入れる
+                  group.entries.forEach(entry => {
+                    entry.deleted = true;
+                  });
+                  chrome.storage.local.get("downloadHistory", function (result) {
+    
+                    // 各エントリの deleted フラグを更新
+                    const updatedHistory = result.downloadHistory.map(h => {
+                      const entryToUpdate = group.entries.find(e => e.boothID === h.boothID && e.filename === h.filename);
+                      if (entryToUpdate) {
+                        return { ...h, deleted: entryToUpdate.deleted };
+                      }
+                      return h;
+                    });
+                    chrome.storage.local.set({ downloadHistory: updatedHistory }, function () {
                       renderHistory();
                     });
+                  });
+                }
+              });
+            });
+            
+            // 削除Toggle
+            const deleteToggle = document.createElement("input");
+            deleteToggle.type = "checkbox";
+            deleteToggle.checked = group.entries[0].deleted || false;
+            deleteToggle.style.cursor = "pointer";
+            deleteToggle.addEventListener("change", function (event) {
+              group.entries.forEach(entry => {
+                entry.deleted = event.target.checked;
+              });
+              chrome.storage.local.get("downloadHistory", function (result) {
+
+                // 各エントリの deleted フラグを更新
+                const updatedHistory = result.downloadHistory.map(h => {
+                  const entryToUpdate = group.entries.find(e => e.boothID === h.boothID && e.filename === h.filename);
+                  if (entryToUpdate) {
+                    return { ...h, deleted: entryToUpdate.deleted };
                   }
+                  return h;
+                });
+                chrome.storage.local.set({ downloadHistory: updatedHistory }, function () {
+                  renderHistory();
                 });
               });
+            });
 
-              btnContainer.appendChild(konoBtn);
-              infoLine.appendChild(fileListDiv);
-              infoLine.appendChild(btnContainer);
-              entryDiv.appendChild(infoLine);
-              container.appendChild(entryDiv);
+            btnContainer.appendChild(konoBtn);
+            btnContainer.appendChild(deleteToggle);
+            infoLine.appendChild(fileListDiv);
+            infoLine.appendChild(btnContainer);
+            entryDiv.appendChild(infoLine);
+            container.appendChild(entryDiv);
+
             // }
           } else {
             // 通常の表示（各ファイルごとにボタンを表示）
@@ -219,6 +265,9 @@ document.addEventListener('DOMContentLoaded', function () {
               infoText.style.overflow = "hidden";
               infoText.style.textOverflow = "ellipsis";
               infoText.style.flexGrow = "1";
+              if (entry.deleted) {
+                infoText.style.textDecoration = "line-through";
+              }
 
               const btnContainer = document.createElement("div");
               btnContainer.style.display = "flex";
@@ -248,6 +297,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     const assetUrl = `vrcae://addAsset?dir=${encodeURIComponent(dir + "/" + entry.filename)}&id=${entry.boothID}`;
                     window.location.href = assetUrl;
+                    if (toggleDeleteAfterRegisterCheckbox.checked) {
+                      // 削除チェックを入れる
+                      entry.deleted = true;
+                      chrome.storage.local.get("downloadHistory", function (result) {
+                        const updatedHistory = result.downloadHistory.map(h => h.boothID === entry.boothID && h.filename === entry.filename ? entry : h);
+                        chrome.storage.local.set({ downloadHistory: updatedHistory }, function () {
+                          renderHistory();
+                        });
+                      });
+                    }
                   });
                 });
 
@@ -266,11 +325,36 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     const assetUrl = `konoasset://addAsset?path=${encodeURIComponent(path + "/" + entry.filename)}&id=${entry.boothID}`;
                     window.location.href = assetUrl;
+                    if (toggleDeleteAfterRegisterCheckbox.checked) {
+                      // 削除チェックを入れる
+                      entry.deleted = true;
+                      chrome.storage.local.get("downloadHistory", function (result) {
+                        const updatedHistory = result.downloadHistory.map(h => h.boothID === entry.boothID && h.filename === entry.filename ? entry : h);
+                        chrome.storage.local.set({ downloadHistory: updatedHistory }, function () {
+                          renderHistory();
+                        });
+                      });
+                    }
                   });
                 });
 
+                // 削除Toggle
+                const deleteToggle = document.createElement("input");
+                deleteToggle.type = "checkbox";
+                deleteToggle.checked = entry.deleted || false;
+                deleteToggle.style.cursor = "pointer";
+                deleteToggle.addEventListener("change", function (event) {
+                  entry.deleted = event.target.checked;
+                  chrome.storage.local.get("downloadHistory", function (result) {
+                    const updatedHistory = result.downloadHistory.map(h => h.boothID === entry.boothID && h.filename === entry.filename ? entry : h);
+                    chrome.storage.local.set({ downloadHistory: updatedHistory }, function () {
+                      renderHistory();
+                    });
+                  });
+                });
                 btnContainer.appendChild(avatarBtn);
                 btnContainer.appendChild(konoBtn);
+                btnContainer.appendChild(deleteToggle);
               }
 
               infoLine.appendChild(infoText);
@@ -305,6 +389,9 @@ document.addEventListener('DOMContentLoaded', function () {
           titleLink.style.whiteSpace = "nowrap";
           titleLink.style.overflow = "hidden";
           titleLink.style.textOverflow = "ellipsis";
+          if (entry.deleted) {
+            titleLink.style.textDecoration = "line-through";
+          }
           titleLine.appendChild(titleLink);
 
           // 下段：タイムスタンプ、ファイル名、ボタン群
@@ -321,6 +408,9 @@ document.addEventListener('DOMContentLoaded', function () {
           infoText.style.overflow = "hidden";
           infoText.style.textOverflow = "ellipsis";
           infoText.style.flexGrow = "1";
+          if (entry.deleted) {
+            infoText.style.textDecoration = "line-through";
+          }
 
           // 右側：ボタン群（ファイル名が空でない場合のみ追加）
           const btnContainer = document.createElement("div");
@@ -351,6 +441,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 const assetUrl = `vrcae://addAsset?dir=${encodeURIComponent(dir + "/" + entry.filename)}&id=${entry.boothID}`;
                 window.location.href = assetUrl;
+                if (toggleDeleteAfterRegisterCheckbox.checked) {
+                  // 削除チェックを入れる
+                  entry.deleted = true;
+                  chrome.storage.local.get("downloadHistory", function (result) {
+                    const updatedHistory = result.downloadHistory.map(h => h.boothID === entry.boothID && h.filename === entry.filename ? entry : h);
+                    chrome.storage.local.set({ downloadHistory: updatedHistory }, function () {
+                      renderHistory();
+                    });
+                  });
+                }
               });
             });
 
@@ -369,12 +469,37 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 const assetUrl = `konoasset://addAsset?path=${encodeURIComponent(path + "/" + entry.filename)}&id=${entry.boothID}`;
                 window.location.href = assetUrl;
+                if (toggleDeleteAfterRegisterCheckbox.checked) {
+                  // 削除チェックを入れる
+                  entry.deleted = true;
+                  chrome.storage.local.get("downloadHistory", function (result) {
+                    const updatedHistory = result.downloadHistory.map(h => h.boothID === entry.boothID && h.filename === entry.filename ? entry : h);
+                    chrome.storage.local.set({ downloadHistory: updatedHistory }, function () {
+                      renderHistory();
+                    });
+                  });
+                }
               });
             });
 
             btnContainer.appendChild(avatarBtn);
             btnContainer.appendChild(konoBtn);
           }
+          // 削除Toggle
+          const deleteToggle = document.createElement("input");
+          deleteToggle.type = "checkbox";
+          deleteToggle.checked = entry.deleted || false;
+          deleteToggle.style.cursor = "pointer";
+          deleteToggle.addEventListener("change", function (event) {
+            entry.deleted = event.target.checked;
+            chrome.storage.local.get("downloadHistory", function (result) {
+              const updatedHistory = result.downloadHistory.map(h => h.boothID === entry.boothID && h.filename === entry.filename ? entry : h);
+              chrome.storage.local.set({ downloadHistory: updatedHistory }, function () {
+                renderHistory();
+              });
+            });
+          });
+          btnContainer.appendChild(deleteToggle);
 
           infoLine.appendChild(infoText);
           infoLine.appendChild(btnContainer);
@@ -617,6 +742,19 @@ document.addEventListener('DOMContentLoaded', function () {
     if (confirm(chrome.i18n.getMessage("confirmClearHistory"))) {
       chrome.storage.local.remove("downloadHistory", function () {
         renderHistory();
+      });
+    }
+  });
+
+  // 選択削除ボタン
+  document.getElementById("btn-selectclear").addEventListener("click", function () {
+    if (confirm(chrome.i18n.getMessage("confirmSelectClearHistory"))) {
+      chrome.storage.local.get("downloadHistory", function (result) {
+        let history = result.downloadHistory || [];
+        history = history.filter(entry => !entry.deleted);
+        chrome.storage.local.set({ downloadHistory: history }, function () {
+          renderHistory();
+        });
       });
     }
   });
