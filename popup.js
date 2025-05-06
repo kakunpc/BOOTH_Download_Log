@@ -621,6 +621,27 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  // リロードボタン
+  document.getElementById("reload").addEventListener("click", function () {
+    chrome.storage.local.get("downloadHistory", function (result) {
+      let history = result.downloadHistory || [];
+      let updated = false;
+      for (let i = 0; i < history.length; i++) {
+        if (history[i].free === undefined || history[i].free === null || history[i].free === "") {
+          history[i].free = false;
+          updated = true;
+        }
+      }
+      if (updated) {
+        chrome.storage.local.set({ downloadHistory: history }, function () {
+          renderHistory();
+        });
+      } else {
+        renderHistory();
+      }
+    });
+  });
+
 
   const uiLang = chrome.i18n.getUILanguage();
   let feedbackUrl;
