@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const toggleBulkRegisterCheckbox = document.getElementById("toggleBulkRegister");
   const folderInput = document.getElementById("downloadFolder");
   const saveFolderBtn = document.getElementById("saveFolder");
+  const toggleDeleteAfterRegisterCheckbox = document.getElementById("toggleDeleteAfterRegister");
 
   // 初回起動時に free 属性が空のエントリを false に更新
   chrome.storage.local.get("downloadHistory", function (result) {
@@ -186,6 +187,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     .join("&");
                   const assetUrl = `konoasset://addAsset?${pathParams}&id=${group.boothID}`;
                   window.location.href = assetUrl;
+                  if (toggleDeleteAfterRegisterCheckbox.checked) {
+                    let newHistory = history.filter(entry => entry.boothID !== group.boothID);
+                    // 登録したらこれを削除
+                    chrome.storage.local.set({ downloadHistory: newHistory }, function () {
+                      renderHistory();
+                    });
+                  }
                 });
               });
 
