@@ -47,6 +47,12 @@
     "feedback": {
         "message": "Feedback"
     },
+    "reload": {
+        "message": "Reload"
+    },
+    "toggleDeleteAfterRegisterLabel":{
+        "message": "Delete after registration"
+    },
     "saveFolderNotSet": {
         "message": "The download folder is not set. Please configure it in the input field above."
     },

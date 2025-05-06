@@ -47,6 +47,12 @@
     "feedback": {
         "message": "Feedback"
     },
+    "reload": {
+        "message": "Reload"
+    },
+    "toggleDeleteAfterRegisterLabel": {
+        "message": "Delete after registration"
+    },
     "saveFolderNotSet": {
         "message": "다운로드 폴더가 설정되지 않았습니다. 위의 입력란에서 설정하세요."
     },
