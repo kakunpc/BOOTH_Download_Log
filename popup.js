@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // 一括登録モードの場合、複数ファイルのグループのみ表示
           if (toggleBulkRegisterCheckbox.checked) {
             // 複数のアイテムがある場合のみ表示
-            if (group.entries.length > 1) {
+            // if (group.entries.length > 1) {
               // ファイル一覧とボタンのコンテナ
               const infoLine = document.createElement("div");
               infoLine.style.display = "flex";
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
               infoLine.appendChild(btnContainer);
               entryDiv.appendChild(infoLine);
               container.appendChild(entryDiv);
-            }
+            // }
           } else {
             // 通常の表示（各ファイルごとにボタンを表示）
             group.entries.forEach(entry => {
