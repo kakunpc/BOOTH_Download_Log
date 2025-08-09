@@ -50,7 +50,7 @@
     "reload": {
         "message": "Reload"
     },
-    "toggleDeleteAfterRegisterLabel":{
+    "toggleDeleteAfterRegisterLabel": {
         "message": "Delete after registration"
     },
     "saveFolderNotSet": {
@@ -61,5 +61,8 @@
     },
     "confirmSelectClearHistory": {
         "message": "Are you sure you want to delete the selected history?"
+    },
+    "updateHistory": {
+        "message": "Update History"
     }
 }

@@ -61,5 +61,8 @@
     },
     "confirmSelectClearHistory": {
         "message": "選択した履歴を削除しますか？"
+    },
+    "updateHistory": {
+        "message": "更新履歴"
     }
 }

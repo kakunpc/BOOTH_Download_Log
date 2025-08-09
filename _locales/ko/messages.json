@@ -41,7 +41,7 @@
     "popupTab": {
         "message": "Open in Tab"
     },
-    "authorX": {
+    "DeveloperX": {
         "message": "Developer X"
     },
     "feedback": {
@@ -61,5 +61,8 @@
     },
     "confirmSelectClearHistory": {
         "message": "선택한 기록을 삭제하시겠습니까?"
+    },
+    "updateHistory": {
+        "message": "Update History"
     }
 }
