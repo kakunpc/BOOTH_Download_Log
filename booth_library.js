@@ -28,7 +28,7 @@ document.addEventListener('click', function (e) {
   const downloadEntry = downloadLink.closest('div.desktop\\:flex.desktop\\:justify-between.desktop\\:items-center');
   if (downloadEntry) {
     // ファイル名の取得
-    const fileNameElement = downloadEntry.querySelector('div.min-w-0.break-words.whitespace-pre-line > div.typography-14');
+    const fileNameElement = downloadEntry.querySelector('div.min-w-0.break-words.whitespace-pre-line > div.text-14');
     if (fileNameElement) {
       fileName = fileNameElement.textContent.trim();
     } else {
@@ -43,7 +43,7 @@ document.addEventListener('click', function (e) {
   if (outerContainer) {
     // タイトルの取得：外側コンテナ内の指定要素から取得
     const titleElement = outerContainer.querySelector(
-      'div[class*="text-text-default"][class*="font-bold"][class*="typography-16"][class*="mb-8"][class*="break-all"]'
+      'div[class*="text-text-default"][class*="font-bold"][class*="text-16"][class*="mb-8"][class*="break-all"]'
     );
     if (titleElement) {
       title = titleElement.textContent.trim();
